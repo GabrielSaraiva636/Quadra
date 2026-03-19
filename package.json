@@ -1,0 +1,12 @@
+{
+  "name": "quadra-show-de-bola",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "npm --prefix backend start",
+    "dev": "npm --prefix backend run dev",
+    "bootstrap": "powershell -ExecutionPolicy Bypass -File .\\scripts\\bootstrap_local.ps1",
+    "smoke": "powershell -ExecutionPolicy Bypass -File .\\scripts\\smoke_test.ps1",
+    "stop": "powershell -ExecutionPolicy Bypass -File .\\scripts\\stop_local_stack.ps1"
+  }
+}

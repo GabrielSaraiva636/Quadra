@@ -1,0 +1,536 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Show de Bola - Gestao da Quadra</title>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <div id="app">
+    <section id="loginSection" class="auth-shell">
+      <div class="auth-bg">
+        <h1>Show de Bola</h1>
+        <p>Gestao inteligente para quadra, copa e caixa.</p>
+        <ul>
+          <li>Controle de jogos e conflitos de horario</li>
+          <li>PDV por jogo com pagamentos parciais</li>
+          <li>Estoque, indicadores e comissao</li>
+        </ul>
+      </div>
+      <div class="auth-card">
+        <h2>Acessar sistema</h2>
+        <p>Entre com seu usuario para continuar.</p>
+        <form id="loginForm" class="grid">
+          <label>
+            Usuario ou email
+            <input id="loginIdentifier" required placeholder="admin@society.local" />
+          </label>
+          <label>
+            Senha
+            <input id="loginPassword" type="password" required placeholder="admin123" />
+          </label>
+          <button type="submit">Entrar</button>
+        </form>
+        <small>Credencial inicial: admin@society.local / admin123</small>
+      </div>
+    </section>
+
+    <section id="mainSection" class="main-shell hidden">
+      <aside class="sidebar">
+        <div class="brand">
+          <h2>Show de Bola</h2>
+          <p>Gestao Society</p>
+        </div>
+
+        <nav id="tabs" class="sidebar-nav">
+          <button data-tab="dashboard" class="active">Painel de Jogos</button>
+          <button data-tab="pdv">PDV do Jogo</button>
+          <button data-tab="estoque">Estoque</button>
+          <button data-tab="caixa">Controle de Caixa</button>
+          <button data-tab="indicadores">Indicadores</button>
+          <button data-tab="usuarios" id="usersTabBtn" class="hidden">Usuarios</button>
+        </nav>
+
+        <div class="sidebar-footer">
+          <div id="currentUser" class="user-chip"></div>
+          <button id="logoutBtn" class="danger">Sair do sistema</button>
+        </div>
+      </aside>
+
+      <div class="workspace">
+        <header class="topbar">
+          <div>
+            <p class="top-kicker">Sistema Show de Bola</p>
+            <h1>Operacao da Quadra</h1>
+          </div>
+          <button id="refreshAllBtn">Atualizar dados</button>
+        </header>
+
+        <section id="tab-dashboard" class="tab-content">
+          <div class="panel-grid two">
+            <div class="card">
+              <h3>Filtros de jogos</h3>
+              <form id="gameFilterForm" class="grid two">
+                <label>
+                  Data
+                  <input type="date" id="filterDate" />
+                </label>
+                <label>
+                  Responsavel
+                  <input id="filterResponsible" placeholder="Nome do responsavel" />
+                </label>
+                <button type="submit">Aplicar filtro</button>
+              </form>
+            </div>
+            <div class="card highlight-card">
+              <h3>Novo horario</h3>
+              <p>Cadastre rapidamente um novo jogo no painel.</p>
+              <button id="clearGameFormBtn">+ Novo horario</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3>Jogos do dia</h3>
+            <div class="table-wrap">
+              <table id="gamesTable">
+                <thead>
+                  <tr>
+                    <th>Nome</th>
+                    <th>Data</th>
+                    <th>Inicio</th>
+                    <th>Fim</th>
+                    <th>Responsavel</th>
+                    <th>Pagantes</th>
+                    <th>Valor/jogador</th>
+                    <th>Status</th>
+                    <th>Total</th>
+                    <th>Pago</th>
+                    <th>Pendente</th>
+                    <th>Acoes</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3 id="gameFormTitle">Cadastro de jogo</h3>
+            <form id="gameForm" class="grid three">
+              <input type="hidden" id="gameId" />
+              <label>
+                Nome do jogo
+                <input id="gameName" required />
+              </label>
+              <label>
+                Data
+                <input id="gameDate" type="date" required />
+              </label>
+              <label>
+                Responsavel
+                <input id="gameResponsible" required />
+              </label>
+              <label>
+                Hora inicio
+                <input id="gameStart" type="time" required />
+              </label>
+              <label>
+                Hora fim
+                <input id="gameEnd" type="time" required />
+              </label>
+              <label>
+                Valor por hora
+                <input id="gamePrice" type="number" min="0" step="0.01" required />
+              </label>
+              <label>
+                Jogadores pagantes
+                <input id="gamePayingPlayers" type="number" min="1" step="1" required />
+              </label>
+              <label>
+                Status
+                <select id="gameStatus">
+                  <option value="4">NAO INICIADO</option>
+                  <option value="1">EM ANDAMENTO</option>
+                  <option value="2">ENCERRADO</option>
+                  <option value="3">CANCELADO</option>
+                </select>
+              </label>
+              <button type="submit">Salvar jogo</button>
+            </form>
+          </div>
+        </section>
+
+        <section id="tab-pdv" class="tab-content hidden">
+          <div class="card">
+            <h3>PDV do jogo</h3>
+            <form id="pdvGameForm" class="grid two">
+              <label>
+                Jogo
+                <select id="pdvGameSelect"></select>
+              </label>
+              <button type="submit">Carregar jogo</button>
+            </form>
+          </div>
+
+          <div class="panel-grid three">
+            <div class="card" id="pdvGameSummary"></div>
+            <div class="card" id="pdvGameAccount"></div>
+            <div class="card" id="pdvGameStatus"></div>
+          </div>
+
+          <div class="card">
+            <h3>Jogadores</h3>
+            <div class="table-wrap">
+              <table id="pdvCustomersTable">
+                <thead>
+                  <tr>
+                    <th>Nome</th>
+                    <th>Pagante do horario</th>
+                    <th>Cota horario</th>
+                    <th>Total consumido</th>
+                    <th>Total conta</th>
+                    <th>Total pago</th>
+                    <th>Pendente</th>
+                    <th>Acoes</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3>Detalhes do horario</h3>
+            <button id="loadGamePayersBtn" type="button">Ver quem ja pagou o horario</button>
+            <div id="gamePayersDetails"></div>
+          </div>
+
+          <div class="panel-grid two">
+            <div class="card">
+              <h3>Adicionar item para cliente</h3>
+              <form id="customerItemForm" class="grid two">
+                <label>
+                  Nome do cliente
+                  <input id="itemCustomerName" required placeholder="Ex: Joao" />
+                </label>
+                <label>
+                  Produto
+                  <select id="itemProductSelect" required></select>
+                </label>
+                <label>
+                  Quantidade
+                  <input id="itemQuantity" type="number" min="1" value="1" required />
+                </label>
+                <label>
+                  Pagante do horario?
+                  <select id="itemIsPayingPlayer">
+                    <option value="false">Nao</option>
+                    <option value="true">Sim</option>
+                  </select>
+                </label>
+                <label>
+                  Pago?
+                  <select id="itemIsPaid">
+                    <option value="false">Nao</option>
+                    <option value="true">Sim</option>
+                  </select>
+                </label>
+                <label>
+                  Forma de pagamento (se pago)
+                  <select id="itemPaymentMethod">
+                    <option value="">Selecione</option>
+                    <option value="1">Dinheiro</option>
+                    <option value="2">Pix</option>
+                    <option value="3">Debito</option>
+                    <option value="4">Credito</option>
+                  </select>
+                </label>
+                <button type="submit">Lancar item</button>
+              </form>
+            </div>
+
+            <div class="card">
+              <h3>Registrar pagamento</h3>
+              <form id="paymentForm" class="grid two">
+                <label>
+                  Tipo de conta
+                  <select id="paymentAccountType" required>
+                    <option value="1">Conta do jogo</option>
+                    <option value="2">Conta individual</option>
+                  </select>
+                </label>
+                <label>
+                  Cliente (individual)
+                  <select id="paymentCustomerSelect"></select>
+                </label>
+                <label>
+                  Valor
+                  <input id="paymentAmount" type="number" min="0.01" step="0.01" required />
+                </label>
+                <label>
+                  Forma
+                  <select id="paymentMethod" required>
+                    <option value="1">Dinheiro</option>
+                    <option value="2">Pix</option>
+                    <option value="3">Debito</option>
+                    <option value="4">Credito</option>
+                  </select>
+                </label>
+                <button type="submit">Registrar pagamento</button>
+              </form>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3>Detalhamento do cliente</h3>
+            <div id="customerDetails"></div>
+          </div>
+        </section>
+
+        <section id="tab-estoque" class="tab-content hidden">
+          <div class="panel-grid two">
+            <div class="card">
+              <h3>Produtos</h3>
+              <form id="productFilterForm" class="toolbar">
+                <input id="productFilterQ" placeholder="Buscar produto" />
+                <label class="inline">
+                  <input id="productFilterActiveOnly" type="checkbox" checked />
+                  Apenas ativos
+                </label>
+                <button type="submit">Buscar</button>
+              </form>
+              <div class="table-wrap">
+                <table id="productsTable">
+                  <thead>
+                    <tr>
+                      <th>Nome</th>
+                      <th>Categoria</th>
+                      <th>Estoque</th>
+                      <th>Minimo</th>
+                      <th>Venda</th>
+                      <th>Custo</th>
+                      <th>Ativo</th>
+                      <th>Acoes</th>
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="card">
+              <h3 id="productFormTitle">Cadastro de produto</h3>
+              <form id="productForm" class="grid two">
+                <input type="hidden" id="productId" />
+                <label>
+                  Nome
+                  <input id="productName" required />
+                </label>
+                <label>
+                  Categoria
+                  <select id="productCategory" required>
+                    <option value="1">BEBIDAS</option>
+                    <option value="2">LANCHES</option>
+                    <option value="3">OUTROS</option>
+                  </select>
+                </label>
+                <label>
+                  Estoque inicial
+                  <input id="productStock" type="number" min="0" value="0" required />
+                </label>
+                <label>
+                  Estoque minimo
+                  <input id="productMin" type="number" min="0" value="0" required />
+                </label>
+                <label>
+                  Preco venda
+                  <input id="productSale" type="number" min="0" step="0.01" required />
+                </label>
+                <label>
+                  Custo unitario
+                  <input id="productCost" type="number" min="0" step="0.01" required />
+                </label>
+                <label>
+                  Ativo
+                  <select id="productActive">
+                    <option value="1">Sim</option>
+                    <option value="0">Nao</option>
+                  </select>
+                </label>
+                <button type="submit">Salvar produto</button>
+              </form>
+
+              <hr />
+
+              <h3>Ajuste de estoque</h3>
+              <form id="stockAdjustForm" class="grid two">
+                <label>
+                  Produto
+                  <select id="stockAdjustProduct" required></select>
+                </label>
+                <label>
+                  Tipo
+                  <select id="stockAdjustType" required>
+                    <option value="1">ENTRADA</option>
+                    <option value="2">SAIDA</option>
+                    <option value="3">AJUSTE</option>
+                  </select>
+                </label>
+                <label>
+                  Quantidade
+                  <input id="stockAdjustQty" type="number" min="0" required />
+                </label>
+                <button type="submit">Aplicar ajuste</button>
+              </form>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3>Historico de movimentacoes</h3>
+            <div class="table-wrap">
+              <table id="stockMovementsTable">
+                <thead>
+                  <tr>
+                    <th>Data</th>
+                    <th>Produto</th>
+                    <th>Tipo</th>
+                    <th>Quantidade</th>
+                    <th>Usuario</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section id="tab-caixa" class="tab-content hidden">
+          <div class="panel-grid two">
+            <div class="card">
+              <h3>Abertura de caixa</h3>
+              <form id="cashOpenForm" class="grid two">
+                <label>
+                  Valor inicial
+                  <input id="cashOpeningAmount" type="number" min="0" step="0.01" required />
+                </label>
+                <button type="submit">Abrir caixa</button>
+              </form>
+            </div>
+            <div class="card">
+              <h3>Resumo de caixa do dia</h3>
+              <button id="loadCashSummaryBtn">Atualizar resumo</button>
+              <div id="cashSummaryBox"></div>
+            </div>
+          </div>
+        </section>
+
+        <section id="tab-indicadores" class="tab-content hidden">
+          <div class="panel-grid two">
+            <div class="card">
+              <h3>Indicadores por jogo</h3>
+              <form id="indicatorGameForm" class="grid two">
+                <label>
+                  Jogo
+                  <select id="indicatorGameSelect"></select>
+                </label>
+                <button type="submit">Consultar</button>
+              </form>
+              <div id="indicatorGameBox"></div>
+            </div>
+            <div class="card">
+              <h3>Indicadores mensais</h3>
+              <form id="indicatorMonthlyForm" class="grid three">
+                <label>
+                  Mes
+                  <input id="indicatorMonth" type="number" min="1" max="12" required />
+                </label>
+                <label>
+                  Ano
+                  <input id="indicatorYear" type="number" min="2020" max="2100" required />
+                </label>
+                <button type="submit">Consultar</button>
+              </form>
+              <div id="indicatorMonthlyBox"></div>
+            </div>
+          </div>
+
+          <div class="panel-grid two">
+            <div class="card">
+              <h3>Indicadores de estoque</h3>
+              <button id="indicatorStockBtn">Consultar estoque</button>
+              <div id="indicatorStockBox"></div>
+            </div>
+            <div class="card">
+              <h3>Comissao de funcionarios</h3>
+              <form id="indicatorCommissionForm" class="grid three">
+                <label>
+                  Mes
+                  <input id="commissionMonth" type="number" min="1" max="12" required />
+                </label>
+                <label>
+                  Ano
+                  <input id="commissionYear" type="number" min="2020" max="2100" required />
+                </label>
+                <button type="submit">Consultar</button>
+              </form>
+              <div id="indicatorCommissionBox"></div>
+            </div>
+          </div>
+        </section>
+
+        <section id="tab-usuarios" class="tab-content hidden">
+          <div class="panel-grid two">
+            <div class="card">
+              <h3>Usuarios</h3>
+              <div class="table-wrap">
+                <table id="usersTable">
+                  <thead>
+                    <tr>
+                      <th>Nome</th>
+                      <th>Email</th>
+                      <th>Perfil</th>
+                      <th>Criado em</th>
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="card">
+              <h3>Novo usuario</h3>
+              <form id="userForm" class="grid two">
+                <label>
+                  Nome
+                  <input id="userName" required />
+                </label>
+                <label>
+                  Email
+                  <input id="userEmail" type="email" required />
+                </label>
+                <label>
+                  Senha
+                  <input id="userPassword" type="password" required />
+                </label>
+                <label>
+                  Perfil
+                  <select id="userRole" required>
+                    <option value="atendente">Atendente</option>
+                    <option value="admin">Administrador</option>
+                  </select>
+                </label>
+                <button type="submit">Criar usuario</button>
+              </form>
+            </div>
+          </div>
+        </section>
+      </div>
+    </section>
+  </div>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <script src="./app.js"></script>
+</body>
+</html>
