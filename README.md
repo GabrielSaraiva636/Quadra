@@ -71,3 +71,14 @@ Voce pode sobrescrever com variaveis de ambiente:
 ## Observacoes
 - O projeto foi criado para execucao local em uma maquina.
 - Se voce preferir Docker, pode usar o `docker-compose.yml` com MySQL.
+
+## Deploy 1-clique no Render
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://dashboard.render.com/blueprint/new?repo=https://github.com/GabrielSaraiva636/Quadra)
+
+Link direto:
+- `https://dashboard.render.com/blueprint/new?repo=https://github.com/GabrielSaraiva636/Quadra`
+
+Ao abrir o link:
+1. Conecte sua conta GitHub na Render (se ainda nao estiver conectada).
+2. Revise os servicos do `render.yaml`.
+3. Clique em `Deploy Blueprint`.
