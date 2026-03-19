@@ -6,6 +6,7 @@
     "start": "npm --prefix backend start",
     "dev": "npm --prefix backend run dev",
     "bootstrap": "powershell -ExecutionPolicy Bypass -File .\\scripts\\bootstrap_local.ps1",
+    "public": "powershell -ExecutionPolicy Bypass -File .\\scripts\\start_cloudflare_tunnel.ps1",
     "smoke": "powershell -ExecutionPolicy Bypass -File .\\scripts\\smoke_test.ps1",
     "stop": "powershell -ExecutionPolicy Bypass -File .\\scripts\\stop_local_stack.ps1"
   }

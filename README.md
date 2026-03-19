@@ -35,6 +35,8 @@ Esse bootstrap faz:
   - `powershell -ExecutionPolicy Bypass -File .\scripts\start_api.ps1`
 - Teste rapido de saude:
   - `powershell -ExecutionPolicy Bypass -File .\scripts\smoke_test.ps1`
+- Publicar link gratuito temporario:
+  - `powershell -ExecutionPolicy Bypass -File .\scripts\start_cloudflare_tunnel.ps1`
 - Parar banco + API:
   - `powershell -ExecutionPolicy Bypass -File .\scripts\stop_local_stack.ps1`
 
@@ -71,6 +73,28 @@ Voce pode sobrescrever com variaveis de ambiente:
 ## Observacoes
 - O projeto foi criado para execucao local em uma maquina.
 - Se voce preferir Docker, pode usar o `docker-compose.yml` com MySQL.
+
+## Deixar no ar gratis (Cloudflare Tunnel)
+Essa e a opcao 100% gratuita sem servidor pago. O site roda no seu PC e fica publico por um link HTTPS.
+
+### 1. Instalar o Cloudflare Tunnel
+- Windows (Winget):
+  - `winget install Cloudflare.cloudflared`
+
+### 2. Subir o sistema local
+- `npm run bootstrap`
+
+### 3. Publicar com link publico
+- `npm run public`
+
+O comando acima:
+- valida se a API esta rodando em `http://localhost:3000`
+- abre um tunel gratuito `trycloudflare`
+- mostra uma URL publica como `https://xxxxx.trycloudflare.com`
+
+Importante:
+- Para continuar no ar, seu computador precisa ficar ligado e com esse terminal aberto.
+- A URL do `trycloudflare` pode mudar a cada inicializacao.
 
 ## Deploy gratuito (Oracle VM + GitHub Actions)
 Esse projeto ja esta preparado para deploy gratuito em uma VM Always Free da Oracle.
