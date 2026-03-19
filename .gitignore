@@ -1,5 +1,6 @@
 node_modules/
 .env
+.env.production
 backend/node_modules/
 backend/.env
 .mariadb-data/

@@ -72,6 +72,39 @@ Voce pode sobrescrever com variaveis de ambiente:
 - O projeto foi criado para execucao local em uma maquina.
 - Se voce preferir Docker, pode usar o `docker-compose.yml` com MySQL.
 
+## Deploy gratuito (Oracle VM + GitHub Actions)
+Esse projeto ja esta preparado para deploy gratuito em uma VM Always Free da Oracle.
+
+Arquivos usados:
+- `deploy/bootstrap_oracle_vm.sh` (configuracao inicial da VM)
+- `deploy/docker-compose.oracle.yml` (API + MySQL em producao)
+- `.github/workflows/deploy-oracle-vm.yml` (deploy automatico a cada push na `main`)
+
+### 1. Configurar a VM Oracle (uma unica vez)
+1. Crie uma VM Ubuntu no Always Free.
+2. Libere as portas `22` e `80` nas regras de rede da Oracle.
+3. Conecte via SSH e execute:
+   - `git clone https://github.com/GabrielSaraiva636/Quadra.git`
+   - `cd Quadra`
+   - `chmod +x deploy/bootstrap_oracle_vm.sh`
+   - `./deploy/bootstrap_oracle_vm.sh`
+4. Saia e entre novamente na VM para aplicar o grupo `docker`.
+
+### 2. Configurar Secrets no GitHub
+No repositório, em `Settings > Secrets and variables > Actions`, crie:
+- `ORACLE_HOST` (IP publico da VM)
+- `ORACLE_USER` (ex.: `ubuntu`)
+- `ORACLE_SSH_PRIVATE_KEY` (chave privada SSH completa)
+- `ORACLE_APP_DIR` (opcional, ex.: `/home/ubuntu/quadra`)
+- `DB_PASSWORD` (senha do usuario `society_user`)
+- `MYSQL_ROOT_PASSWORD` (senha root do MySQL)
+- `JWT_SECRET` (segredo JWT em producao)
+
+### 3. Publicar
+- Faça push na branch `main`.
+- O workflow `Deploy Oracle VM (Free)` executa automaticamente.
+- URL final: `http://SEU_IP_PUBLICO`
+
 ## Deploy 1-clique no Render
 [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://dashboard.render.com/blueprint/new?repo=https://github.com/GabrielSaraiva636/Quadra)
 

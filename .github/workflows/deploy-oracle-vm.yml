@@ -1,0 +1,105 @@
+name: Deploy Oracle VM (Free)
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate secrets
+        env:
+          ORACLE_HOST: ${{ secrets.ORACLE_HOST }}
+          ORACLE_USER: ${{ secrets.ORACLE_USER }}
+          ORACLE_SSH_PRIVATE_KEY: ${{ secrets.ORACLE_SSH_PRIVATE_KEY }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+        run: |
+          set -euo pipefail
+          [ -n "$ORACLE_HOST" ] || (echo "Missing secret: ORACLE_HOST" && exit 1)
+          [ -n "$ORACLE_USER" ] || (echo "Missing secret: ORACLE_USER" && exit 1)
+          [ -n "$ORACLE_SSH_PRIVATE_KEY" ] || (echo "Missing secret: ORACLE_SSH_PRIVATE_KEY" && exit 1)
+          [ -n "$DB_PASSWORD" ] || (echo "Missing secret: DB_PASSWORD" && exit 1)
+          [ -n "$MYSQL_ROOT_PASSWORD" ] || (echo "Missing secret: MYSQL_ROOT_PASSWORD" && exit 1)
+          [ -n "$JWT_SECRET" ] || (echo "Missing secret: JWT_SECRET" && exit 1)
+
+      - name: Resolve app directory
+        run: |
+          APP_DIR="${{ secrets.ORACLE_APP_DIR }}"
+          if [ -z "$APP_DIR" ]; then
+            APP_DIR="/home/${{ secrets.ORACLE_USER }}/quadra"
+          fi
+          echo "APP_DIR=$APP_DIR" >> "$GITHUB_ENV"
+
+      - name: Setup SSH key
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh
+          printf '%s\n' "${{ secrets.ORACLE_SSH_PRIVATE_KEY }}" > ~/.ssh/oracle_vm_key
+          chmod 600 ~/.ssh/oracle_vm_key
+          ssh-keyscan -H "${{ secrets.ORACLE_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Sync project to Oracle VM
+        run: |
+          set -euo pipefail
+          rsync -az --delete \
+            --exclude '.git' \
+            --exclude 'node_modules' \
+            --exclude 'backend/node_modules' \
+            --exclude '.mariadb-data' \
+            --exclude 'backend_server.out' \
+            --exclude 'backend_server.err' \
+            -e "ssh -i ~/.ssh/oracle_vm_key" \
+            ./ "${{ secrets.ORACLE_USER }}@${{ secrets.ORACLE_HOST }}:${APP_DIR}"
+
+      - name: Deploy on Oracle VM
+        run: |
+          set -euo pipefail
+          ssh -i ~/.ssh/oracle_vm_key "${{ secrets.ORACLE_USER }}@${{ secrets.ORACLE_HOST }}" "APP_DIR='${APP_DIR}' bash -s" <<EOF
+          set -euo pipefail
+          mkdir -p "\$APP_DIR"
+          cd "\$APP_DIR"
+
+          if ! command -v docker >/dev/null 2>&1; then
+            echo "Docker nao encontrado na VM."
+            exit 1
+          fi
+
+          if ! docker compose version >/dev/null 2>&1; then
+            echo "Docker Compose plugin nao encontrado na VM."
+            exit 1
+          fi
+
+          cat > .env.production <<ENV_FILE
+          PORT=3000
+          JWT_SECRET=${{ secrets.JWT_SECRET }}
+          JWT_EXPIRES_IN=12h
+          DB_HOST=mysql
+          DB_PORT=3306
+          DB_NAME=society_db
+          DB_USER=society_user
+          DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+          MYSQL_DATABASE=society_db
+          MYSQL_USER=society_user
+          MYSQL_PASSWORD=${{ secrets.DB_PASSWORD }}
+          MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}
+          TZ=America/Sao_Paulo
+          ENV_FILE
+
+          docker compose -f deploy/docker-compose.oracle.yml up -d --build
+          docker image prune -f
+          EOF
+
+      - name: Show running services
+        run: |
+          set -euo pipefail
+          ssh -i ~/.ssh/oracle_vm_key "${{ secrets.ORACLE_USER }}@${{ secrets.ORACLE_HOST }}" \
+            "cd '${APP_DIR}' && docker compose -f deploy/docker-compose.oracle.yml ps"
